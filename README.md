@@ -1,8 +1,13 @@
 # TransferChan
 > 喵喵喵
 
+### > Plaaace
+
+喵喵喵喵喵 项目 （隐藏中
+
 ### > Save_me_plz.mlx
-Github 歧视 matlab 是叭（恼
+
+Github 歧视 matlab 是叭（恼（该文件可视版
 
 ```maltlab
 % 解方程 %
@@ -64,13 +69,11 @@ p = [1 3 3 0];
 roots = roots(p)
 
 
-% 矩阵性质 %
+% 矩阵性质 (稳定性）%
 clear;clc;
 
-A = [0 1 0 0;
-     0 0 1 0;
-     0 0 0 1;
-    -680 -176 -86 -6];
+A = [1, 0;
+     1, 1];
 
 [V, D] = eig(A);
 disp('特征值：');
@@ -96,10 +99,10 @@ LeftNullSpace = null(conj(A.'))  % 左零空间
 % 解状态空间方程 %
 clear;clc;
 
-A = [-2 0;
-     0 -3];
+A = [0 1
+     -1 0];
 B = [1; 1];
-C = [-3 4];
+C = [1 1];
 D = 0;
 
 % 阶跃信号（单位阶跃函数）：heaviside(t)
@@ -110,8 +113,8 @@ D = 0;
 
 syms s t
 
-% u(t) = heaviside(t);
-u(t) = 2 * exp(t);
+u(t) = dirac(t);
+% u(t) = 2 * exp(t);
 % u(t) = 0;  % zero input response
 
 % x0 = [2/3; 1/2];
@@ -129,16 +132,18 @@ Y_t = ilaplace(Y_s, s, t)  % 对Y(s)进行反拉普拉斯变换得到时域解�
 % 状态方程 <-> 传递函数 %
 clear;clc;
 
-A = [0 1 0 0;
-     0 0 1 0;
-     0 0 0 1;
-    -680 -176 -86 -6];
-B = [0; 0; 0; 1];
-C = [100 20 10 0];
+A = [0 1
+     -1 0];
+B = [1; 1];
+C = [1 1];
 D = 0;
 
+syms s t
 sys = ss(A, B, C, D);
+G(s) = (C * inv(s * eye(size(A)) - A) * B + D)  % * U(s)
 H = tf(sys)  % 求传递函数 G(s)
+Ht = ilaplace(G(s), s, t)
+
 
 G_num = [0 0 10 20 100];
 G_den = [1 6 86 176 680];
@@ -146,7 +151,7 @@ G_den = [1 6 86 176 680];
 
 % Diagonal Canonical Form ABCD 对角标准型 %
 
-[V, D] = eig(A);  % 求特征值和特征向量
+[V, D] = eig(A)  % 求特征值和特征向量
 
 A_dcf = V^(-1) * A * V
 B_dcf = V^(-1) * B
@@ -157,8 +162,8 @@ D_dcf = D
 % 能控性和能控标准型 %
 clear;clc;
 
-A = [0, 1;
-     4, 3];  % 系统矩阵
+A = [1, 0;
+     1, 1];  % 系统矩阵
 
 B = [0; 1];  % 输入矩阵
 
@@ -166,8 +171,15 @@ C = [100 20];
 
 D = 0;
 
+% T = [0, 1;
+%      1, 0];
+% % T = fliplr(M_c);
+% A_tilde = T \ A * T
+% B_tilde = T \ B
+
 % 计算能控性矩阵
 M_c = ctrb(A, B)
+rankMc = rank(M_c)
 
 % 检查能控性
 if rank(M_c) == size(A, 1)
@@ -186,6 +198,103 @@ else
 end
 
 
+% 能观性和能观标准型 %
+clear; clc;
+
+A = [2, 0;
+     -1, 1];  % 系统矩阵
+
+B = [0; 1];  % 输入矩阵
+
+C = [1 1]; % 输出矩阵
+
+D = 0;
+
+% 计算能观性矩阵
+M_o = obsv(A, C)
+rankMo = rank(M_o)
+
+% 检查能观性
+if rank(M_o) == size(A, 1)
+    disp('系统是能观的');
+
+    % 计算能观标准型
+    T = M_o';
+    A_tilde = T \ A * T
+    B_tilde = T \ B
+    C_tilde = C * T
+    D_tilde = D
+    
+else
+    disp('系统不是能观的');
+end
+
+
+% 反馈器和观测器%
+A = [0 1; -6 0];
+B = [0; 1];
+C = [1 0];
+D = 0;  % 通常为零矩阵
+
+% 全阶反馈器设计
+
+% 设定全阶状态反馈器的期望闭环极点
+desired_poles_full_order = [-20 -30];
+
+% 计算全阶状态反馈增益矩阵K
+K_full_order = place(A, B, desired_poles_full_order);
+
+disp('全阶状态反馈增益K:');
+disp(K_full_order);
+
+% 全阶观测器设计
+% 设定全阶观测器的期望极点
+desired_poles_observer = [-40 -50];
+
+% 计算全阶观测器增益矩阵L
+L = place(A', C', desired_poles_observer)';
+
+disp('全阶观测器增益L:');
+disp(L);
+
+
+% 基于全阶观测器的反馈补偿器
+
+A = [0 1; -6 0];
+B = [0; 1];
+C = [1 0];
+D = 0;  % 通常为零矩阵
+
+L = [90; 1994];
+K = [594 50];
+
+A_k = A - B * K - L * C + L * D * K
+B_k = L
+C_k = -K
+D_k = 0
+
+% 降阶观测器设计
+A = [0 1; -6 0];
+B = [0; 1];
+C = [1 0];
+D = zeros(size(C,1),size(B,2));  % 通常为零矩阵
+
+% 设定降阶观测器的期望闭环极点
+desired_poles_reduced_order = [-40];
+
+% 分解A矩阵为子矩阵
+T = eye(size(A, 1))
+A = inv(T)*A*T
+A_22 = A(rank(C)+1:end, rank(C)+1:end)
+A_12 = A(1:rank(C), rank(C)+1:end)
+
+% 计算降阶状态观测增益矩阵L
+K_reduced_order = place(A_22, A_12, desired_poles_reduced_order);
+
+disp('降阶状态观测增益L:');
+disp(K_reduced_order);
+
+
 % 计算伴随矩阵 %
 clear;clc;
 
@@ -193,6 +302,56 @@ A = [4, 3;
      6, 3];
 
 adjoint_A = adjointMatrix(A)
+
+
+
+function [A_11, A_22, B_1, B_2, T] = ctrlDecomp(A, B)  % 能控性分解 %
+    M_c = ctrb(A, B);
+    rank_Mc = rank(M_c);
+    if rank_Mc == size(A, 1)
+        disp("The system is controllable.")
+        A_11 = A;
+        B_1 = B;
+        A_22 = 0;
+        B_2 = 0;
+        T = eye(size(A, 1));
+    else
+        disp("The system is uncontrollable.")
+        [~, jb] = rref(M_c);
+        basis = M_c(:, jb);
+        r = rank_Mc;
+        n = size(A, 1);
+        if r < n
+            additional_vectors = zeros(n, n - r);
+            added = 0;
+            
+            for i = 1:n
+                candidate = zeros(n, 1);
+                candidate(i) = 1;
+                
+                if rank([basis candidate]) > r + added
+                    additional_vectors(:, added + 1) = candidate;
+                    added = added + 1;
+                end
+    
+                if added == n - r
+                    break;
+                end
+            end    
+            T = [basis additional_vectors];
+        else
+            T = basis;
+        end
+
+        A_tilde = T \ A * T;
+        A_11 = A_tilde(1 : rank_Mc, 1 : rank_Mc);
+        A_22 = A_tilde(rank_Mc + 1 : end, rank_Mc + 1 : end);
+
+        B_tilde = T \ B;
+        B_1 = B_tilde(1 : rank_Mc, :);
+        B_2 = B_tilde(rank_Mc + 1 : end, :);
+    end
+end
 
 
 function adjA = adjointMatrix(A)
@@ -211,4 +370,3 @@ function adjA = adjointMatrix(A)
 end
 
 % end %
-
