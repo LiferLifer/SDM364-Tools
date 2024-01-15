@@ -1,4 +1,4 @@
-# TransferChan
+# SDM364-Tools
 > 喵喵喵
 
 ### > Plaaace
@@ -6,6 +6,8 @@
 喵喵喵喵喵 项目 （隐藏中
 
 ### > Save_me_plz.mlx
+
+课程和作业可能出现过的matlab小函数整合，建议下载mlx食用，建议检验正确性（虽然我自用
 
 Github 歧视 matlab 是叭（恼（该文件可视版
 
